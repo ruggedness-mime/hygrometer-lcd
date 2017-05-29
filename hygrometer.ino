@@ -149,7 +149,6 @@ int temperature(int temperatureValue) {
   temperatureValue = DHT.temperature;
   return temperatureValue;
 }  
-}
 
 int valueFunction(int hygrometerValue)
 {
@@ -179,4 +178,3 @@ int reverseBrightnessFunction(int reverseLedBrightness, int pin)
   analogWrite(pin, reverseLedBrightness);
   delay(500); //Read every 0.5 sec.
 }
-
