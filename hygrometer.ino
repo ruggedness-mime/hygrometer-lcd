@@ -127,7 +127,6 @@ void loop() {
     lcd.print("%");
     lcd.print("      ");
     delay(500);
-  //lcd.print("Hi Masayo!");
   } else {
     lcd.setCursor(0, 0);
     lcd.print("Temp = ");
