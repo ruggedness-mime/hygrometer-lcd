@@ -29,13 +29,13 @@ float temperatureValue = 0;
 // set the LCD address to 0x3F for the QunqiI2C 1602 16 chars 2 line display
 // Set the pins on the I2C chip used for LCD connections:
 //                    addr, en,rw,rs,d4,d5,d6,d7,bl,blpol
-LiquidCrystal_I2C lcd(0x3F, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);  // Set the LCD I2C address
+LiquidCrystal_I2C lcd(0x3C, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);  // Set the LCD I2C address
 
 #include <dht.h>
 
 dht DHT;
 
-#define DHT11_PIN 7 // set up the DHT to read from pin 7
+#define DHT11_PIN 9 // set up the DHT to read from pin 7
 
 
 
@@ -76,15 +76,15 @@ void loop() {
 
   if ((value <= 100) && (value >= 75))
   {
-    digitalWrite(redLedPin, HIGH);
+    digitalWrite(redLedPin, LOW);
     green = brightnessFunction(green, greenLedPin, 815);
     if (value > 80)
     {
-      digitalWrite(yellowLedPin, HIGH);
+      digitalWrite(yellowLedPin, LOW);
     }
     else if ((value > 74) && (value <= 80))
     {
-      digitalWrite(yellowLedPin, LOW);
+      digitalWrite(yellowLedPin, HIGH);
     }
     //yellow = brightnessFunction(yellow, yellowLedPin);  //these commented out as the yellow seemed excessively bright during testing
     //yellow = yellow + 204;
@@ -92,14 +92,14 @@ void loop() {
 
   if ((value < 80) && (value >= 60))
   {
-    digitalWrite(redLedPin, HIGH);
-    digitalWrite(yellowLedPin, LOW);
+    digitalWrite(redLedPin, LOW);
+    digitalWrite(yellowLedPin, HIGH);
   }
 
   else if (value < 60)
   {
-    digitalWrite(greenLedPin, HIGH);
-    digitalWrite(yellowLedPin, HIGH);
+    digitalWrite(greenLedPin, LOW);
+    digitalWrite(yellowLedPin, LOW);
     red = reverseBrightnessFunction(red, redLedPin);    
   }
   
@@ -114,29 +114,50 @@ void loop() {
   value = newValue;
 
   // read the data from the DHT11
-  float chk = DHT.read11(DHT11_PIN);
+  int chk = DHT.read11(DHT11_PIN);
+
+  Serial.print("Read sensor: ");
+    switch (chk)
+    {
+      case DHTLIB_OK: 
+      Serial.println("OK"); 
+        break;
+        case DHTLIB_ERROR_CHECKSUM: 
+      Serial.println("Checksum error"); 
+        break;
+        case DHTLIB_ERROR_TIMEOUT: 
+      Serial.println("Time out error"); 
+        break;
+        default: 
+      Serial.println("Unknown error"); 
+        break;
+    }
+  lcd.setCursor(0, 0);
+  lcd.print("Temp = ");
+  int temperatureValue = DHT.temperature;
+  lcd.print(Fahrenheit(temperatureValue), 0);
+  lcd.print(char(223));
+  lcd.print("|Soil:");
+  delay(500);
   
-  //read the state of the button
-  buttonState = digitalRead(buttonPin);
+  lcd.setCursor(0,1);
+  lcd.print("Hum. = ");
+  int humidityValue = DHT.humidity;
+  lcd.print(humidityValue);
+  lcd.print("%");
+  lcd.print("|  ");
+  lcd.print(value);
+  lcd.print("%");
+  delay(500);
+  
+  
+  
 
-  if (buttonState == HIGH) {
-    lcd.setCursor(0,0);
-    lcd.print("Humidity = ");
-    float humidityValue = DHT.humidity;
-    lcd.print(humidityValue, 2);
-    lcd.print("%");
-    lcd.print("      ");
-    delay(500);
-  } else {
-    lcd.setCursor(0, 0);
-    lcd.print("Temp = ");
-    float temperatureValue = DHT.temperature;
-    lcd.print(temperatureValue, 2);
-    lcd.print(char(223));
-    lcd.print("      ");
-    delay(500);
-  }  
+}
 
+double Fahrenheit(double celsius)
+{
+  return 1.8 * celsius + 32;
 }
 
 int humidity(int humidityValue) {
@@ -148,6 +169,7 @@ int temperature(int temperatureValue) {
   temperatureValue = DHT.temperature;
   return temperatureValue;
 }  
+
 
 int valueFunction(int hygrometerValue)
 {
@@ -164,7 +186,7 @@ int brightnessFunction(int ledBrightness, int pin, int highValue)
 {
   ledBrightness = analogRead(hygrometer);
   ledBrightness = constrain(ledBrightness, 400, 1023);
-  ledBrightness = map(ledBrightness, 400, highValue, 0, 255);
+  ledBrightness = map(ledBrightness, 400, highValue, 255, 0);
   analogWrite(pin, ledBrightness);
   delay(500); //Read every 0.5 sec.
 }
@@ -173,7 +195,7 @@ int reverseBrightnessFunction(int reverseLedBrightness, int pin)
 {
   reverseLedBrightness = analogRead(hygrometer);
   reverseLedBrightness = constrain(reverseLedBrightness, 400, 1023);
-  reverseLedBrightness = map(reverseLedBrightness, 400, 1023, 255, 0);
+  reverseLedBrightness = map(reverseLedBrightness, 400, 1023, 0, 255);
   analogWrite(pin, reverseLedBrightness);
   delay(500); //Read every 0.5 sec.
 }
